@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AutoPulse | Logistic Calculator</title>
+    <script src="full_db.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+        :root { 
+            --pulse-yellow: #FFD700;         
+            --pulse-yellow-glow: rgba(255, 215, 0, 0.4);
+            --pulse-yellow-light: #FBE155;   
+            --asphalt-dark: #0f1115;   
+            --asphalt-light: #181a20;  
+            --black-bg: #000000;       
+            --input-bg: #111318;       
+            --border-color: #2d3139;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --copart-blue: #3b82f6;
+            --iaa-red: #dc2626;
+        }
+
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background: radial-gradient(circle at top center, var(--asphalt-light), var(--black-bg)); 
+            color: var(--text-main);
+            display: flex; justify-content: center; padding: 20px 10px; margin: 0; min-height: 100vh;
+        }
+
+        .card { 
+            background: rgba(15, 17, 21, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            width: 100%; max-width: 450px; border-radius: 16px; padding: 30px 25px; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.03); 
+            border: 1px solid rgba(255,255,255,0.05); animation: fadeIn 0.5s ease-out; position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .partners-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .partner-link { text-decoration: none; opacity: 0.6; transition: all 0.3s ease; font-size: 1.1rem; line-height: 1; }
+        .partner-link:hover { opacity: 1; transform: scale(1.05); }
+        .logo-bidcars { color: #f8fafc; font-weight: 900; font-style: italic; letter-spacing: -0.5px; }
+        .logo-bidcars span { color: var(--copart-blue); }
+        .logo-copart { color: var(--copart-blue); font-weight: 900; letter-spacing: -0.5px; }
+        .logo-iaa { color: var(--iaa-red); font-weight: 900; font-style: italic; letter-spacing: -1px; }
+        .logo-impact { color: var(--iaa-red); font-weight: 900; font-style: italic; letter-spacing: -0.5px; }
+
+        .brand-header { text-align: center; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; }
+        .brand-header img { 
+            width: 100%; 
+            max-width: 240px; 
+            height: auto; 
+            mix-blend-mode: screen; 
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.2)); 
+        }
+
+        .calc-options { 
+            display: flex; width: 100%; margin: 15px 0 25px;
+            background: rgba(0,0,0,0.6); padding: 5px; border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.05); box-sizing: border-box;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .mode-btn {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            font-size: clamp(0.65rem, 3.5vw, 0.8rem); font-weight: 700; color: #64748b; 
+            text-transform: uppercase; cursor: pointer; 
+            padding: 12px 5px; border-radius: 8px; transition: all 0.3s ease;
+            text-align: center; line-height: 1.2; box-sizing: border-box;
+        }
+        .mode-btn:hover { color: #f8fafc; }
+        .mode-btn.active {
+            color: #000000; background: var(--pulse-yellow); 
+            box-shadow: 0 4px 15px var(--pulse-yellow-glow); font-weight: 800;
+        }
+
+        .dealer-modal {
+            position: absolute; top: 0; left: 0; right: 0;
+            background: rgba(15, 17, 21, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-radius: 16px; padding: 35px 25px; z-index: 100;
+            clip-path: inset(0 0 100% 0); transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 2px solid var(--pulse-yellow); box-shadow: 0 15px 40px rgba(0,0,0,0.9); text-align: center;
+        }
+        .dealer-modal.open { clip-path: inset(0 0 0 0); }
+        .dealer-modal label { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; display: block; }
+        .dealer-modal input {
+            text-align: center; font-size: 2rem; font-weight: 800; letter-spacing: 15px; width: 70%; margin: 0 auto 20px; display: block; padding: 10px;
+            background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); outline: none;
+        }
+        .dealer-modal input:focus { border-color: var(--pulse-yellow); box-shadow: 0 0 15px var(--pulse-yellow-glow); }
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .modal-actions button {
+            flex: 1; padding: 14px; border-radius: 10px; font-weight: 800; font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-cancel { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); }
+        .btn-cancel:hover { background: #2d3139; }
+        .btn-ok { background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.4); color: var(--pulse-yellow); }
+        .btn-ok:hover { background: var(--pulse-yellow); color: #000; box-shadow: 0 0 15px var(--pulse-yellow-glow); }
+
+        .status { font-size: 11px; font-weight: 500; text-align: center; margin-bottom: 20px; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
+        .status.success { background: rgba(255, 215, 0, 0.1); color: var(--pulse-yellow); border-color: rgba(255, 215, 0, 0.2); }
+
+        label { display: block; line-height: 1.3; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select { 
+            font-family: inherit; font-weight: 500; width: 100%; padding: 14px 15px; 
+            background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; font-size: 16px; 
+            margin-bottom: 15px; box-sizing: border-box; outline: none; transition: all 0.3s ease; -webkit-appearance: none;
+        }
+        input:focus, select:focus { border-color: var(--pulse-yellow); box-shadow: 0 0 0 3px var(--pulse-yellow-glow); }
+
+        .search-container { position: relative; margin-bottom: 15px; }
+        .search-container input { margin-bottom: 0; padding-right: 40px; }
+        .clear-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); font-size: 24px; line-height: 1; cursor: pointer; padding: 0; display: none; }
+        .clear-btn:active { color: var(--pulse-yellow); }
+
+        .results-dropdown { position: absolute; top: calc(100% + 5px); left: 0; right: 0; background: var(--asphalt-light); border: 1px solid var(--border-color); border-radius: 10px; max-height: 220px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
+        .result-item { padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 0.95rem; color: var(--text-main); transition: background 0.2s;}
+        .result-item:active, .result-item:hover { background: rgba(255, 215, 0, 0.1); color: var(--pulse-yellow); }
+        .result-item:last-child { border-bottom: none; }
+        select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 12px auto; }
+
+        .input-with-currency { position: relative; }
+        .input-with-currency input { padding-right: 50px; margin-bottom: 0; }
+        .currency-indicator { position: absolute; right: 15px; top: 40%; transform: translateY(-50%); color: var(--text-muted); font-weight: 700; font-size: 0.9rem; pointer-events: none; }
+
+        .bid-total-row { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 15px; width: 100%; }
+        .bid-total-row .half-col { flex: 1; min-width: 0; }
+        .bid-total-row label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.65rem; }
+        .equals-sign { font-size: 1.5rem; font-weight: 800; color: #64748b; padding-bottom: 11px; line-height: 1; }
+
+        .toggles-container { margin: 15px 0 20px; display: flex; flex-direction: column; gap: 10px; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .toggle-row .labels { display: flex; flex-direction: column; gap: 2px; flex: 1; padding-right: 10px; }
+        .toggle-row span.primary { font-size: 0.85rem; font-weight: 600; color: #f8fafc; }
+        .toggle-row span.secondary { font-size: 0.65rem; font-weight: 500; color: #94a3b8; line-height: 1.2; text-transform: none; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; margin: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--input-bg); border: 1px solid var(--border-color); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--text-muted); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--pulse-yellow); border-color: var(--pulse-yellow); }
+        input:checked + .slider:before { transform: translateX(20px); background-color: #000; }
+
+        .results { background: rgba(0,0,0,0.5); border-radius: 12px; padding: 20px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); font-size: 0.95rem; font-weight: 400; color: #cbd5e1; }
+        .line:first-child { padding-top: 0; }
+        .line span:last-child { font-weight: 600; color: #f8fafc; }
+        .accent-line { margin: 10px -20px 0; padding: 12px 20px; border-top: 1px dashed rgba(255, 215, 0, 0.3); background: rgba(255, 215, 0, 0.05); color: var(--pulse-yellow); font-weight: 700; border-bottom: none;}
+        
+        .customs-block { background: rgba(255, 215, 0, 0.03); margin: 10px -20px 0; border-top: 1px dashed rgba(255, 215, 0, 0.3); }
+        .customs-header { color: var(--pulse-yellow); font-weight: 700; padding: 12px 20px 8px; display: flex; justify-content: space-between; transition: color 0.3s;}
+        .sub-line { display: flex; justify-content: space-between; padding: 4px 20px; font-size: 0.85rem; color: #94a3b8; }
+        .sub-line:last-child { padding-bottom: 12px; }
+        .curr-uah { color: #64748b; font-size: 0.9em; margin-right: 6px; font-weight: normal;}
+        .rate-text { color: #64748b; font-size: 0.75rem; text-align: right;}
+
+        .total { background: linear-gradient(135deg, var(--asphalt-dark), var(--black-bg)); color: white; padding: 20px; border-radius: 10px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: 900; font-size: 1.25rem; border: 1px solid rgba(255, 215, 0, 0.3); box-shadow: 0 0 20px rgba(255, 215, 0, 0.15); }
+        .total span:last-child { color: var(--pulse-yellow); font-size: 1.6rem; letter-spacing: -0.5px; text-shadow: 0 0 10px var(--pulse-yellow-glow); }
+
+        .correction-btn {
+            width: 100%; background: rgba(255,255,255,0.05); color: var(--text-muted);
+            border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px;
+            font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s;
+            margin-top: 15px; display: block;
+        }
+        .correction-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
+        .correction-btn.active-overrides {
+            background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.4); color: var(--pulse-yellow);
+        }
+        .correction-menu {
+            background: rgba(15, 17, 21, 0.95); border: 1px solid var(--pulse-yellow);
+            border-radius: 12px; padding: 15px; margin-top: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8); display: none;
+        }
+        .corr-title { font-size: 0.8rem; font-weight: 700; color: var(--pulse-yellow); text-transform: uppercase; margin-bottom: 15px; text-align: center; }
+        .corr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .corr-grid div { display: flex; flex-direction: column; }
+        .corr-grid label { font-size: 0.6rem; margin-bottom: 4px; color: #cbd5e1; }
+        .corr-grid input { padding: 8px; font-size: 0.9rem; text-align: center; background: rgba(0,0,0,0.5); margin-bottom: 0; font-weight: 600;}
+        .corr-ok-btn {
+            width: 100%; background: var(--pulse-yellow); color: #000; border: none;
+            padding: 10px; border-radius: 8px; font-weight: 800; margin-top: 15px; cursor: pointer;
+            text-transform: uppercase; transition: 0.3s; font-family: inherit;
+        }
+        .corr-ok-btn:hover { background: var(--pulse-yellow-light); box-shadow: 0 0 10px var(--pulse-yellow-glow); }
+
+        .extra-fees-block { background: rgba(255, 215, 0, 0.05); border: 1px dashed rgba(255, 215, 0, 0.3); border-radius: 10px; padding: 12px 20px; margin-top: 15px; position: relative; }
+        .not-included-tag { display: block; font-size: 0.7rem; color: var(--pulse-yellow); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; text-align: center; }
+        .info-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; font-weight: 500; color: #cbd5e1; }
+        .info-line span:last-child { color: var(--pulse-yellow); font-weight: 700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
+
+        .timeline { display: flex; align-items: center; justify-content: space-between; margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .tl-step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; z-index: 2; }
+        .tl-icon { font-size: 2.5rem; line-height: 1; text-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        .tl-text { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-align: center; letter-spacing: 0.5px; text-transform: uppercase; }
+        .tl-line { flex: 1; height: 2px; background: rgba(255,255,255,0.15); position: relative; margin: 0 5px; top: -14px; z-index: 1;}
+        .tl-line::after { content: ''; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 1.8rem; text-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .line-ship::after { content: '🚢'; }
+        .line-truck::after { content: '🚛'; }
+        .line-train::after { content: '🚆'; }
+
+        .converter-block { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-top: 20px; }
+        .converter-title { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 10px; text-align: center; }
+        .converter-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: flex-end; }
+        .converter-grid div { display: flex; flex-direction: column; justify-content: flex-end; text-align: center; height: 100%; }
+        .converter-grid label { font-size: 0.6rem; color: #cbd5e1; margin-bottom: 6px; line-height: 1.15; display: block; }
+        .converter-grid input { padding: 8px; font-size: 0.95rem; text-align: center; margin-bottom: 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); font-weight: 700; width: 100%; box-sizing: border-box; }
+        .converter-grid input:focus { border-color: var(--pulse-yellow); box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); border-color: var(--pulse-yellow);} 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); border-color: var(--pulse-yellow);} 40%, 60% { transform: translate3d(4px, 0, 0); border-color: var(--pulse-yellow);} }
+    </style>
+</head>
+<body>
+<div class="card">
+    
+    <div id="dealerModal" class="dealer-modal">
+        <label>Enter Dealer Password</label>
+        <input type="password" id="dealerPin" maxlength="3" pattern="\d*" placeholder="***">
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeDealerModal()">Cancel</button>
+            <button class="btn-ok" onclick="submitDealerModal()">OK</button>
+        </div>
+    </div>
+
+    <div class="partners-row">
+        <a href="https://bid.cars/ua/" target="_blank" class="partner-link logo-bidcars">BID<span>CARS</span></a>
+        <a href="https://www.copart.com/lotSearchResults?free=true&query=&qId=7ca33fe5-d792-427a-ad47-ae642e814bd2-1773050327211&index=undefined" target="_blank" class="partner-link logo-copart">Copart</a>
+        <a href="https://www.iaai.com/Search?url=NwI3m7rnm%2b6h5MSWsgeAQnskvqZz3s5Pm1GZsHlc68o%3d" target="_blank" class="partner-link logo-iaa">IAA</a>
+        <a href="https://ca.iaai.com/search" target="_blank" class="partner-link logo-impact">IMPACT</a>
+    </div>
+
+    <div class="brand-header">
+        <img src="AutoPulse.png" alt="AutoPulse Logo">
+    </div>
+
+    <div class="calc-options">
+        <div class="mode-btn active" id="btnPublic" onclick="activatePublicMode()">LOGISTIC CALCULATOR</div>
+        <div class="mode-btn" id="btnDealer" onclick="openDealerModal()">DEALERS ONLY CALCULATOR</div>
+    </div>
+
+    <div id="dbStatus" class="status">Підключення до бази та НБУ...</div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: flex-end;">
+        <div style="width: 100%;">
+            <label>Тип авто</label>
+            <select id="type" onchange="triggerCalc()">
+                <option value="SUV">SUV</option>
+                <option value="Car">Sedan</option>
+                <option value="Pickup">Pickup</option>
+                <option value="Motorcycle">Moto</option>
+            </select>
+        </div>
+        <div style="width: 100%;">
+            <label>Рік випуску (шильдик)</label>
+            <input type="number" id="year" value="2020" oninput="triggerCalc()">
+        </div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 6px;">
+        <label style="margin-bottom: 0;">Локація аукціону</label>
+        <div id="dynamicAucLogo" style="display: none; font-size: 1.1rem; opacity: 0.9; line-height: 1; text-align: right;"></div>
+    </div>
+    
+    <div class="search-container">
+        <input type="text" id="city" placeholder="Почніть вводити місто..." autocomplete="off">
+        <button type="button" id="clearBtn" class="clear-btn">&times;</button>
+        <div id="locList" class="results-dropdown"></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: flex-end;">
+        <div style="width: 100%;">
+            <label id="volLabel">Двигун (см³)</label>
+            <input type="number" id="vol" value="2000" oninput="triggerCalc()">
+        </div>
+        <div style="width: 100%;">
+            <label>Пальне</label>
+            <select id="fuel" onchange="updateFuelLabel(); triggerCalc()"><option value="petrol">Бензин</option><option value="diesel">Дизель</option><option value="hybrid">Гібрид</option><option value="electric">Електро</option></select>
+        </div>
+    </div>
+
+    <label style="margin-bottom: 6px;">Місто отримання</label>
+    <select id="destination" onchange="triggerCalc()" style="margin-bottom: 20px;"></select>
+    
+    <div class="bid-total-row">
+        <div class="half-col">
+            <label>Ставка на аукціоні</label>
+            <div class="input-with-currency">
+                <input type="number" id="bid" placeholder="0" oninput="triggerCalc()">
+                <span class="currency-indicator">USD</span>
+            </div>
+        </div>
+        <div class="equals-sign">=</div>
+        <div class="half-col">
+            <label>Разом (бюджет)</label>
+            <div class="input-with-currency">
+                <input type="number" id="totalBudget" placeholder="0" oninput="reverseCalc()">
+                <span class="currency-indicator">USD</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="toggles-container">
+        <div class="toggle-row">
+            <span class="primary" style="flex:1;">Фірма (юр. особа)</span>
+            <label class="switch">
+                <input type="checkbox" id="toggleFirm" onchange="triggerCalc()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-row">
+            <div class="labels">
+                <span class="primary">Документи:</span>
+                <span class="secondary">Bill of Sale, Parts Only, Certificate Of Destruction, та ін.</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="toggleBos" onchange="triggerCalc()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-row">
+            <div class="labels">
+                <span class="primary">"Закриті" аукціони:</span>
+                <span class="secondary">Wisconsin, Michigan, Nevada, Utah, Alabama</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="toggleBidder" onchange="triggerCalc()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-row">
+            <span class="primary" style="flex:1;">Страхування (1.5%)</span>
+            <label class="switch">
+                <input type="checkbox" id="toggleIns" onchange="triggerCalc()">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="results">
+        
+        <div id="publicLines">
+            <div class="line"><span id="pubDeliveryLabel">Повна вартість з доставкою</span><span id="pubDeliveryRes">$0</span></div>
+            <div class="line accent-line" style="display:flex; justify-content:space-between;">
+                <span id="pubCustomsLabel">Митні платежі (МВ)</span><span id="pubCustomsRes">$0</span>
+            </div>
+        </div>
+
+        <div id="dealerLines" style="display:none;">
+            <div class="line"><span>Вартість лоту</span><span id="resBid">$0</span></div>
+            <div class="line"><span>Аукціонний збір</span><span id="resFee">$0</span></div>
+            
+            <div class="line" id="dlrCanTaxLine" style="display:none; font-weight:600; color: #f8fafc;"><span>Податок Канади (<span id="canTaxPercent">0</span>%)</span><span id="dlrCanTaxRes">$0</span></div>
+            <div class="line" id="dlrCanDocLine" style="display:none; font-weight:600; color: #f8fafc;"><span>Канадські документи</span><span id="dlrCanDocRes">$170</span></div>
+
+            <div class="line"><span>Трансфер (SWIFT)</span><span id="resSwift">$0</span></div>
+            <div class="line"><span>Суша по США/Канаді</span><span id="resLand">$0</span></div>
+            <div class="line"><span>Морський фрахт</span><span id="resSea">$0</span></div>
+            <div class="line"><span id="complexLabel">Комплекс / Доставка</span><span id="resComplex">$0</span></div>
+            
+            <div class="line" id="lineEvSurcharge" style="display:none; font-weight:600; color: var(--pulse-yellow);"><span style="color:var(--pulse-yellow)">EV Surcharge</span><span id="resEvSurcharge" style="color:var(--pulse-yellow)">$0</span></div>
+            
+            <div class="line" id="dlrFirmLine" style="display:none; font-weight:600; color: var(--pulse-yellow);"><span style="color:var(--pulse-yellow)">Юр. особа</span><span id="dlrFirmRes" style="color:var(--pulse-yellow)">$60</span></div>
+            <div class="line" id="dlrBosLine" style="display:none; font-weight:600; color: var(--pulse-yellow);"><span style="color:var(--pulse-yellow)">Документи (Bill of Sale)</span><span id="dlrBosRes" style="color:var(--pulse-yellow)">$250</span></div>
+            <div class="line" id="dlrBidderLine" style="display:none; font-weight:600; color: var(--pulse-yellow);"><span style="color:var(--pulse-yellow)">Bidder (Закриті аукціони)</span><span id="dlrBidderRes" style="color:var(--pulse-yellow)">$300</span></div>
+            <div class="line" id="dlrInsLine" style="display:none; font-weight:600; color: var(--pulse-yellow);"><span style="color:var(--pulse-yellow)">Страхування</span><span id="dlrInsRes" style="color:var(--pulse-yellow)">$0</span></div>
+
+            <div class="customs-block">
+                <div class="customs-header">
+                    <span id="customsTitle">Митні платежі (МВ)</span>
+                    <span id="resCustomsTotal">$0</span>
+                </div>
+                <div class="sub-line"><span>├ Ввізне мито (10%)</span><span id="resDuty">$0</span></div>
+                <div class="sub-line"><span>├ Акцизний збір</span><span id="resExcise">$0</span></div>
+                <div class="sub-line"><span id="vatLabel">├ ПДВ (20%)</span><span id="resVat">$0</span></div>
+                <div class="sub-line">
+                    <span style="color:#64748b">└ Курс НБУ на сьогодні</span>
+                    <span class="rate-text" id="resRates">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="total"><span>РАЗОМ:</span><span id="resTotal">$0</span></div>
+
+        <div id="correctionBlock" style="display:none; width: 100%;">
+            <button id="correctionBtn" class="correction-btn" onclick="toggleCorrectionMenu()">Корегування ⚙️</button>
+            <div id="correctionMenu" class="correction-menu">
+                <div class="corr-title">Внести зміни</div>
+                <div class="corr-grid">
+                    <div>
+                        <label>Трансфер (SWIFT)</label>
+                        <input type="number" id="corrSwift" placeholder="0">
+                    </div>
+                    <div>
+                        <label>Суша по США/Канаді</label>
+                        <input type="number" id="corrLand" placeholder="0">
+                    </div>
+                    <div>
+                        <label>Морський фрахт</label>
+                        <input type="number" id="corrSea" placeholder="0">
+                    </div>
+                    <div>
+                        <label>Комплекс / Доставка</label>
+                        <input type="number" id="corrCpx" placeholder="0">
+                    </div>
+                </div>
+                <button class="corr-ok-btn" onclick="applyCorrections()">ОК</button>
+            </div>
+        </div>
+
+        <div class="extra-fees-block">
+            <span class="not-included-tag">(! не входить у вартість)</span>
+            <div class="info-line">
+                <span>Орієнтовний перший облік (ПФУ+МРЕВ)</span>
+                <span id="resPfInfo">$0</span>
+            </div>
+            <div class="info-line">
+                <span>Сертифікація</span>
+                <span id="resCertInfo">$0</span>
+            </div>
+            <div class="info-line">
+                <span>Сервіс в МВС</span>
+                <span id="resMvsInfo">$0</span>
+            </div>
+        </div>
+        
+        <div class="timeline" id="timelineUI" style="display:none;">
+            <div class="tl-step"><span class="tl-icon" id="flagStart">🇺🇸</span><span class="tl-text" id="tlStart">Port</span></div>
+            <div class="tl-line line-ship"></div>
+            <div class="tl-step"><span class="tl-icon" id="flagEU">🇪🇺</span><span class="tl-text" id="tlEU">Port</span></div>
+            <div class="tl-line line-truck" id="euToUaLine"></div>
+            <div class="tl-step"><span class="tl-icon" id="flagUA">🇺🇦</span><span class="tl-text" id="tlDest">Львів</span></div>
+        </div>
+
+        <div class="converter-block">
+            <div class="converter-title">Конвертер валют (Актуально НБУ)</div>
+            <div class="converter-grid">
+                <div>
+                    <label>Долар (USD)</label>
+                    <input type="number" id="convUsd" placeholder="0" oninput="convertCurrency('USD')">
+                </div>
+                <div>
+                    <label>Канадський (CAD)</label>
+                    <input type="number" id="convCad" placeholder="0" oninput="convertCurrency('CAD')">
+                </div>
+                <div>
+                    <label>Гривня (UAH)</label>
+                    <input type="number" id="convUah" placeholder="0" oninput="convertCurrency('UAH')">
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const cpS = [{m:49.99,f:1},{m:99.99,f:1},{m:199.99,f:25},{m:299.99,f:60},{m:349.99,f:85},{m:399.99,f:100},{m:449.99,f:125},{m:499.99,f:135},{m:549.99,f:145},{m:599.99,f:155},{m:699.99,f:170},{m:799.99,f:195},{m:899.99,f:215},{m:999.99,f:230},{m:1199.99,f:250},{m:1299.99,f:270},{m:1399.99,f:285},{m:1499.99,f:300},{m:1599.99,f:315},{m:1699.99,f:330},{m:1799.99,f:350},{m:1999.99,f:370},{m:2399.99,f:390},{m:2499.99,f:425},{m:2999.99,f:460},{m:3499.99,f:505},{m:3999.99,f:555},{m:4499.99,f:600},{m:4999.99,f:625},{m:5499.99,f:650},{m:5999.99,f:675},{m:6499.99,f:700},{m:6999.99,f:720},{m:7499.99,f:755},{m:7999.99,f:775},{m:8499.99,f:800},{m:8999.99,f:820},{m:9999.99,f:820},{m:10499.99,f:850},{m:10999.99,f:850},{m:11499.99,f:850},{m:11999.99,f:860},{m:12499.99,f:875},{m:14999.99,f:890},{m:Infinity,p:0.06}];
+    const cpM = [{m:49.99,f:30},{m:99.99,f:45},{m:199.99,f:70},{m:299.99,f:105},{m:349.99,f:130},{m:399.99,f:132.5},{m:449.99,f:145},{m:499.99,f:150},{m:549.99,f:165},{m:599.99,f:170},{m:699.99,f:190},{m:799.99,f:225},{m:899.99,f:250},{m:999.99,f:270},{m:1199.99,f:300},{m:1299.99,f:335},{m:1399.99,f:335},{m:1499.99,f:360},{m:1599.99,f:370},{m:1699.99,f:400},{m:1799.99,f:415},{m:1999.99,f:465},{m:2399.99,f:500},{m:2499.99,f:510},{m:2999.99,f:570},{m:3499.99,f:695},{m:3999.99,f:710},{m:4499.99,f:710},{m:4999.99,f:720},{m:5499.99,f:780},{m:5999.99,f:815},{m:6499.99,f:850},{m:6999.99,f:880},{m:7499.99,f:900},{m:7999.99,f:1020},{m:8999.99,f:1025},{m:9999.99,f:1050},{m:Infinity,p:0.105}];
+    const iaF = [{m:99.99,f:1},{m:199.99,f:25},{m:299.99,f:60},{m:349.99,f:85},{m:399.99,f:100},{m:449.99,f:125},{m:499.99,f:135},{m:549.99,f:145},{m:599.99,f:155},{m:699.99,f:170},{m:799.99,f:195},{m:899.99,f:215},{m:999.99,f:230},{m:1199.99,f:250},{m:1299.99,f:270},{m:1399.99,f:285},{m:1499.99,f:300},{m:1599.99,f:315},{m:1699.99,f:330},{m:1799.99,f:350},{m:1999.99,f:370},{m:2399.99,f:390},{m:2499.99,f:425},{m:2999.99,f:460},{m:3499.99,f:505},{m:3999.99,f:555},{m:4499.99,f:600},{m:4999.99,f:625},{m:5499.99,f:650},{m:5999.99,f:675},{m:6499.99,f:700},{m:6999.99,f:720},{m:7499.99,f:755},{m:7999.99,f:775},{m:8499.99,f:800},{m:8999.99,f:820},{m:9999.99,f:820},{m:11499.99,f:850},{m:11999.99,f:860},{m:12499.99,f:875},{m:14999.99,f:890},{m:Infinity,p:0.06}];
+
+    let currentTotal = 0; 
+    let usdRateNBU = 38.50; 
+    let eurRateNBU = 42.00; 
+    let cadRateNBU = 28.50; 
+    let crossRateEurUsd = 1.08; 
+    
+    let currentMode = 'public'; 
+    let isReverse = false;
+
+    function vibro(ms = 30) { if(navigator.vibrate) navigator.vibrate(ms); }
+
+    function openDealerModal() {
+        if (currentMode === 'dealer') return; 
+        vibro(30);
+        document.getElementById('dealerModal').classList.add('open');
+        setTimeout(() => document.getElementById('dealerPin').focus(), 300);
+    }
+    
+    function closeDealerModal() {
+        vibro(20);
+        document.getElementById('dealerModal').classList.remove('open');
+        document.getElementById('dealerPin').value = '';
+    }
+
+    function submitDealerModal() {
+        const pinInput = document.getElementById('dealerPin');
+        // НОВИЙ ПАРОЛЬ 909
+        if(pinInput.value === '909') {
+            vibro([30, 50, 30]); 
+            closeDealerModal();
+            currentMode = 'dealer';
+            document.getElementById('btnDealer').classList.add('active');
+            document.getElementById('btnPublic').classList.remove('active');
+            triggerCalc(); 
+        } else {
+            vibro(100); 
+            pinInput.classList.add('shake');
+            setTimeout(() => {
+                pinInput.classList.remove('shake');
+                pinInput.value = '';
+            }, 400);
+        }
+    }
+
+    function activatePublicMode() {
+        if (currentMode === 'public') return;
+        vibro(30);
+        currentMode = 'public';
+        document.getElementById('btnPublic').classList.add('active');
+        document.getElementById('btnDealer').classList.remove('active');
+        triggerCalc(); 
+    }
+
+    function toggleCorrectionMenu() {
+        vibro(20);
+        const menu = document.getElementById('correctionMenu');
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function applyCorrections() {
+        vibro(30);
+        document.getElementById('correctionMenu').style.display = 'none';
+        triggerCalc();
+    }
+
+    function convertCurrency(source) {
+        const valUsd = parseFloat(document.getElementById('convUsd').value) || 0;
+        const valCad = parseFloat(document.getElementById('convCad').value) || 0;
+        const valUah = parseFloat(document.getElementById('convUah').value) || 0;
+
+        if (source === 'USD') {
+            const uah = valUsd * usdRateNBU;
+            document.getElementById('convUah').value = uah ? uah.toFixed(2) : '';
+            document.getElementById('convCad').value = uah ? (uah / cadRateNBU).toFixed(2) : '';
+        } else if (source === 'CAD') {
+            const uah = valCad * cadRateNBU;
+            document.getElementById('convUah').value = uah ? uah.toFixed(2) : '';
+            document.getElementById('convUsd').value = uah ? (uah / usdRateNBU).toFixed(2) : '';
+        } else if (source === 'UAH') {
+            document.getElementById('convUsd').value = valUah ? (valUah / usdRateNBU).toFixed(2) : '';
+            document.getElementById('convCad').value = valUah ? (valUah / cadRateNBU).toFixed(2) : '';
+        }
+    }
+
+    async function loadNBURates() {
+        try {
+            const res = await fetch('https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json');
+            const data = await res.json();
+            const usdObj = data.find(c => c.cc === 'USD');
+            const eurObj = data.find(c => c.cc === 'EUR');
+            const cadObj = data.find(c => c.cc === 'CAD');
+            
+            if (usdObj && eurObj) {
+                usdRateNBU = usdObj.rate;
+                eurRateNBU = eurObj.rate;
+                if (cadObj) cadRateNBU = cadObj.rate;
+                crossRateEurUsd = eurRateNBU / usdRateNBU;
+                
+                const statusEl = document.getElementById('dbStatus');
+                statusEl.innerText = statusEl.innerText.replace('Підключення до бази та НБУ...', '');
+                statusEl.innerText += ` | НБУ: $1 = ${usdRateNBU.toFixed(2)} ₴`;
+                
+                document.getElementById('resRates').innerText = `$1 = ${usdRateNBU.toFixed(2)} ₴ | €1 = ${eurRateNBU.toFixed(2)} ₴`;
+
+                if (document.getElementById('city').value !== "") triggerCalc();
+            }
+        } catch (e) {
+            console.error('Помилка НБУ:', e);
+            document.getElementById('resRates').innerText = "Офлайн (Базовий курс)";
+        }
+    }
+
+    function updateFuelLabel() {
+        const fuel = document.getElementById('fuel').value;
+        const label = document.getElementById('volLabel');
+        label.innerText = (fuel === 'electric') ? 'Батарея (кВт-год)' : 'Двигун (см³)';
+        if (fuel === 'electric' && document.getElementById('vol').value == 2000) {
+            document.getElementById('vol').value = 75;
+        }
+    }
+
+    function getSelectedLoc() {
+        let raw = document.getElementById('city').value;
+        let city = raw.replace(' (Copart)', '').replace(' (IAAI)', '').replace(' (Canada)', '');
+        
+        if (raw.includes('(Copart)') && db.copart && db.copart[city]) return { loc: db.copart[city], type: 'copart', city: city };
+        if (raw.includes('(IAAI)') && db.iaai && db.iaai[city]) return { loc: db.iaai[city], type: 'iaai', city: city };
+        if (raw.includes('(Canada)') && db.canada && db.canada[city]) return { loc: db.canada[city], type: 'canada', city: city };
+        
+        if (db.copart && db.copart[raw]) return { loc: db.copart[raw], type: 'copart', city: raw };
+        if (db.iaai && db.iaai[raw]) return { loc: db.iaai[raw], type: 'iaai', city: raw };
+        if (db.canada && db.canada[raw]) return { loc: db.canada[raw], type: 'canada', city: raw };
+        
+        return { loc: null, type: null, city: city };
+    }
+
+    window.onload = () => {
+        if (typeof db === 'undefined') { document.getElementById('dbStatus').innerText = "❌ База не знайдена"; return; }
+        
+        let keys = [];
+        if (db.copart) for (let k in db.copart) keys.push(k + " (Copart)");
+        if (db.iaai) for (let k in db.iaai) keys.push(k + " (IAAI)");
+        if (db.canada) for (let k in db.canada) keys.push(k + " (Canada)");
+        keys.sort();
+
+        document.getElementById('dbStatus').innerText = "✅ База: " + keys.length + " локацій";
+        document.getElementById('dbStatus').classList.add('success');
+        
+        loadNBURates();
+
+        document.getElementById('dealerPin').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') submitDealerModal();
+        });
+
+        const cityInput = document.getElementById('city');
+        const locDropdown = document.getElementById('locList');
+        const clearBtn = document.getElementById('clearBtn');
+
+        cityInput.addEventListener('input', function() {
+            clearBtn.style.display = this.value.length > 0 ? 'block' : 'none';
+            const query = this.value.toUpperCase();
+            locDropdown.innerHTML = '';
+            
+            if (query.length < 1) { locDropdown.style.display = 'none'; return; }
+            const filtered = keys.filter(k => k.toUpperCase().includes(query)).slice(0, 20);
+
+            if (filtered.length > 0) {
+                filtered.forEach(loc => {
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+                    
+                    let displayHtml = loc;
+                    if(loc.includes(' (Copart)')) displayHtml = loc.replace(' (Copart)', ' <span style="color:var(--copart-blue); font-size:0.75em; font-weight:800; letter-spacing:1px; float:right; margin-top:2px;">COPART</span>');
+                    if(loc.includes(' (IAAI)')) displayHtml = loc.replace(' (IAAI)', ' <span style="color:var(--iaa-red); font-size:0.75em; font-weight:800; letter-spacing:1px; float:right; margin-top:2px;">IAAI</span>');
+                    if(loc.includes(' (Canada)')) displayHtml = loc.replace(' (Canada)', ' <span style="color:#ef4444; font-size:0.75em; font-weight:800; letter-spacing:1px; float:right; margin-top:2px;">CANADA</span>');
+                    
+                    div.innerHTML = displayHtml;
+                    div.onclick = () => {
+                        vibro();
+                        cityInput.value = loc; 
+                        clearBtn.style.display = 'block';
+                        locDropdown.style.display = 'none';
+                        cityInput.blur(); 
+                        handleLoc(); 
+                    };
+                    locDropdown.appendChild(div);
+                });
+                locDropdown.style.display = 'block';
+            } else {
+                locDropdown.style.display = 'none';
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            vibro(50);
+            cityInput.value = '';
+            clearBtn.style.display = 'none';
+            locDropdown.style.display = 'none';
+            document.getElementById('dynamicAucLogo').style.display = 'none';
+            document.getElementById('timelineUI').style.display = 'none';
+            document.getElementById('dlrCanTaxLine').style.display = 'none';
+            document.getElementById('dlrCanDocLine').style.display = 'none';
+            cityInput.focus();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) locDropdown.style.display = 'none';
+        });
+    }
+
+    function handleLoc() {
+        const { loc, type } = getSelectedLoc();
+        const dynLogo = document.getElementById('dynamicAucLogo');
+        
+        if (!loc) { 
+            dynLogo.style.display = 'none'; 
+            return; 
+        }
+        
+        dynLogo.style.display = 'block';
+        
+        if (type === 'canada') {
+            dynLogo.innerHTML = '<span class="logo-copart">Copart</span> & <span class="logo-impact">IMPACT</span>';
+        } else if (type === 'copart') { 
+            dynLogo.innerHTML = '<span class="logo-copart">Copart</span>'; 
+        } else { 
+            dynLogo.innerHTML = '<span class="logo-iaa">IAA</span>'; 
+        }
+        
+        const s = typeof seaRates !== 'undefined' ? seaRates[loc.port] : null;
+        
+        const dest = document.getElementById('destination');
+        dest.innerHTML = '';
+        
+        let optGdansk = document.createElement('option');
+        optGdansk.value = "Gdansk|1000|Клевань Рівне"; // Це змінить назву міста на візуальній шкалі доставки внизу
+        optGdansk.text = "GDANSK-Клевань Рівне ($1000)"; // Це змінить текст у самому випадаючому списку
+        
+        let optKlaipeda = document.createElement('option');
+        optKlaipeda.value = "Klaipeda|1200|Зимна Вода Львів обл.";
+        optKlaipeda.text = "KLAIPEDA-Зимна Вода Львів обл. ($1200)";
+
+        if (s && s.end === 'Klaipeda') {
+            dest.appendChild(optKlaipeda);
+            dest.appendChild(optGdansk);
+        } else {
+            dest.appendChild(optGdansk);
+            dest.appendChild(optKlaipeda);
+        }
+
+        triggerCalc();
+    }
+
+    function triggerCalc() { 
+        vibro(20); 
+        isReverse = false;
+        calc(); 
+    }
+
+    function reverseCalc() {
+        const targetTotal = parseFloat(document.getElementById('totalBudget').value) || 0;
+        const bidInput = document.getElementById('bid');
+
+        if(targetTotal <= 0) {
+            bidInput.value = '';
+            isReverse = false;
+            calc();
+            return;
+        }
+
+        isReverse = true;
+        let low = 0;
+        let high = targetTotal;
+        let bestBid = 0;
+
+        while(low <= high) {
+            let mid = Math.floor((low + high) / 2);
+            let m = runMath(mid);
+            if(!m) break;
+
+            let currentTot = Math.ceil(currentMode === 'dealer' ? m.dlrTotal : m.pubTotal);
+
+            if(currentTot === targetTotal) {
+                bestBid = mid;
+                break;
+            } else if(currentTot < targetTotal) {
+                bestBid = mid;
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+
+        bidInput.value = bestBid;
+        calc(); 
+    }
+
+    function animateValue(id, start, end, duration) {
+        if (start === end) return;
+        const obj = document.getElementById(id);
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const current = Math.floor(progress * (end - start) + start);
+            obj.innerText = "$" + current.toLocaleString('uk-UA');
+            if (progress < 1) window.requestAnimationFrame(step);
+            else obj.innerText = "$" + end.toLocaleString('uk-UA');
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    const formatUahUsd = (usdVal) => {
+        const uah = Math.ceil(usdVal * usdRateNBU).toLocaleString('uk-UA');
+        const usd = Math.ceil(usdVal).toLocaleString('uk-UA');
+        return `<span class="curr-uah">(${uah} ₴)</span> $${usd}`;
+    };
+
+    const formatYellow = (uahVal, usdVal) => {
+        const uah = Math.ceil(uahVal).toLocaleString('uk-UA');
+        const usd = Math.ceil(usdVal).toLocaleString('uk-UA');
+        return `<span style="color:var(--pulse-yellow); font-size:0.9em; margin-right:6px; font-weight:500;">(${uah} ₴)</span> <span style="color:var(--pulse-yellow); font-weight:800;">$${usd}</span>`;
+    };
+
+    function runMath(testBid) {
+        const { loc, type, city } = getSelectedLoc();
+        if (!loc) return null;
+
+        const t = document.getElementById('type').value;
+        const destSelect = document.getElementById('destination');
+        
+        const isFirm = document.getElementById('toggleFirm').checked;
+        const firmFee = isFirm ? 60 : 0;
+        const isBos = document.getElementById('toggleBos').checked;
+        const bosFee = isBos ? 250 : 0;
+        const isBidder = document.getElementById('toggleBidder').checked;
+        const bidderFee = isBidder ? 300 : 0;
+        const isIns = document.getElementById('toggleIns').checked;
+        
+        let destVal = destSelect ? destSelect.value : "Gdansk|1000|Рівне";
+        let parts = destVal.split('|');
+        let selectedEuPort = parts[0];
+        let cpx = parseFloat(parts[1]) || 0;
+        let timelineCity = parts[2] || "";
+        let destNameShort = (timelineCity.includes('Зимна Вода')) ? "Зимна Вода" : timelineCity;
+
+        if (t === 'Pickup' && cpx > 0) cpx += 100;
+        const origCpx = cpx;
+        const corrCpx = document.getElementById('corrCpx').value;
+        if (currentMode === 'dealer' && corrCpx !== "") cpx = parseFloat(corrCpx);
+
+        const s = typeof seaRates !== 'undefined' ? (seaRates[loc.port] || { end: "Gdansk", Car: 0, SUV: 0, Pickup: 0, Motorcycle: 0 }) : { end: "Gdansk", Car: 0, SUV: 0, Pickup: 0, Motorcycle: 0 };
+        
+        // НОВА ЛОГІКА СУШІ: Додаємо штраф ТІЛЬКИ якщо клієнт змінив дефолтний порт
+        let extraLandCost = 0;
+        if (s && s.end && selectedEuPort !== s.end) {
+            const fuel = document.getElementById('fuel').value;
+            const yr = parseInt(document.getElementById('year').value) || 2026;
+            const vol = parseInt(document.getElementById('vol').value) || 0;
+            let cityStrLen = city ? city.length : 5;
+            extraLandCost = ((cityStrLen + yr + vol) % 6) * 10 + 50; // від 50 до 100
+        }
+
+        let baseLand = (loc[t] === "Call" || !loc[t]) ? (loc["Car"] || 0) : loc[t];
+        if (baseLand === "Call") baseLand = 0; // Захист від помилки NaN
+        
+        const origLand = Number(baseLand) + extraLandCost;
+        let land = origLand;
+        const corrLand = document.getElementById('corrLand').value;
+        if (currentMode === 'dealer' && corrLand !== "") land = parseFloat(corrLand);
+
+        const origSea = s[t] || s["Car"] || 0;
+        let sea = origSea;
+        const corrSea = document.getElementById('corrSea').value;
+        if (currentMode === 'dealer' && corrSea !== "") sea = parseFloat(corrSea);
+        
+        let table = (type === 'iaai') ? iaF : (t === 'Motorcycle' ? cpM : cpS);
+        const row = table.find(r => testBid <= r.m);
+        let fee = row ? (row.p ? testBid * row.p : row.f) : (testBid * 0.06);
+        fee += 300; 
+        if (type === 'iaai') fee += 20;
+
+        let isCanada = (type === 'canada');
+        let canTax = 0; let canDoc = 0;
+        if (isCanada) { canTax = (testBid + fee) * loc.tax; canDoc = 170; }
+
+        const swiftCommission = isBidder ? 100 : 70;
+        const origSw = ((testBid + fee + land + sea + canTax + canDoc) * 0.025 + swiftCommission);
+        let sw = origSw;
+        const corrSw = document.getElementById('corrSwift').value;
+        if (currentMode === 'dealer' && corrSw !== "") sw = parseFloat(corrSw);
+        
+        let insuranceFee = 0;
+        if (isIns) { insuranceFee = Math.max(100, (testBid + fee) * 0.015); }
+        
+        const fuel = document.getElementById('fuel').value;
+        const yr = parseInt(document.getElementById('year').value) || 2026;
+        const vol = parseFloat(document.getElementById('vol').value) || 0;
+        const shippingBasis = (t === 'Motorcycle') ? 800 : 1600;
+        const cBasis = testBid + fee + shippingBasis + canTax; 
+        const cBasisUah = cBasis * usdRateNBU;
+        
+        let dty = 0, exc = 0, vt = 0, electricFee = 0;
+        if (fuel === 'electric' || fuel === 'hybrid') electricFee = 200;
+
+        if (fuel === 'electric') {
+            dty = 0; exc = vol * crossRateEurUsd; vt = (cBasis + dty + exc) * 0.20; 
+        } else if (t === 'Motorcycle') {
+            dty = cBasis * 0.10;
+            let motoRate = (vol <= 500) ? 0.062 : ((vol <= 800) ? 0.443 : 0.447);
+            exc = vol * motoRate * crossRateEurUsd; 
+            vt = (cBasis + dty + exc) * 0.20;
+        } else {
+            dty = cBasis * 0.10;
+            let age = Math.min(15, Math.max(1, new Date().getFullYear() - yr - 1));
+            const CUSTOM_RATE = crossRateEurUsd; 
+            if (fuel === 'hybrid') exc = 100 * CUSTOM_RATE;
+            else if (fuel === 'petrol') {
+                const base = (vol <= 3000) ? 50 : 100;
+                exc = base * (vol / 1000) * age * CUSTOM_RATE;
+            } else if (fuel === 'diesel') {
+                const base = (vol <= 3500) ? 75 : 150;
+                exc = base * (vol / 1000) * age * CUSTOM_RATE;
+            }
+            vt = (cBasis + dty + exc) * 0.20;
+        }
+        
+        let cst = dty + exc + vt;
+        if (isFirm) { cst = cst * 1.02; }
+
+        let pfUah = 0;
+        if (fuel !== 'electric') {
+            if (cBasisUah <= 499620) { pfUah = cBasisUah * 0.03; } 
+            else if (cBasisUah <= 878120) { pfUah = cBasisUah * 0.04; } 
+            else { pfUah = cBasisUah * 0.05; }
+        }
+        let firstRegUah = pfUah + 1500; 
+        let firstRegUsd = firstRegUah / usdRateNBU;
+        let certUah = 5000;
+        let certUsd = certUah / usdRateNBU;
+        let mvsUsd = 100;
+        let mvsUah = mvsUsd * usdRateNBU;
+
+        let dlrTotal = testBid + fee + sw + land + sea + cpx + cst + electricFee + firmFee + bosFee + canTax + canDoc + bidderFee + insuranceFee;
+        
+        let pubTotal = dlrTotal + 500;
+        let pubDeliverySum = pubTotal - cst; 
+
+        return {
+            fee, sw, land, sea, canTax, canDoc, insuranceFee, dty, exc, vt, cst, electricFee, cpx,
+            dlrTotal, pubTotal, pubDeliverySum, isCanada, isFirm, isBos, isBidder, isIns,
+            origSw, origLand, origSea, origCpx,
+            firstRegUah, firstRegUsd, certUah, certUsd, mvsUah, mvsUsd,
+            destNameShort, timelineCity, loc, selectedEuPort, port: loc.port
+        };
+    }
+
+    function calc() {
+        const bid = parseFloat(document.getElementById('bid').value) || 0;
+        const m = runMath(bid);
+        if (!m) return;
+
+        document.getElementById('corrSwift').placeholder = Math.ceil(m.origSw);
+        document.getElementById('corrLand').placeholder = m.origLand;
+        document.getElementById('corrSea').placeholder = m.origSea;
+        document.getElementById('corrCpx').placeholder = m.origCpx;
+
+        const hasOverride = document.getElementById('corrSwift').value !== "" ||
+                            document.getElementById('corrLand').value !== "" ||
+                            document.getElementById('corrSea').value !== "" ||
+                            document.getElementById('corrCpx').value !== "";
+        const corrBtn = document.getElementById('correctionBtn');
+        if (hasOverride) {
+            corrBtn.classList.add('active-overrides');
+            corrBtn.innerText = "Корегування (Активовано)";
+        } else {
+            corrBtn.classList.remove('active-overrides');
+            corrBtn.innerText = "Корегування ⚙️";
+        }
+
+        const f = (n) => "$" + Math.ceil(n).toLocaleString('uk-UA');
+
+        document.getElementById('resPfInfo').innerHTML = formatYellow(m.firstRegUah, m.firstRegUsd);
+        document.getElementById('resCertInfo').innerHTML = formatYellow(m.certUah, m.certUsd);
+        document.getElementById('resMvsInfo').innerHTML = formatYellow(m.mvsUah, m.mvsUsd);
+
+        let baseCustomsText = m.isFirm ? 'Митні платежі (МВ 2%)' : 'Митні платежі (МВ)';
+
+        if (currentMode === 'dealer') {
+            document.getElementById('dealerLines').style.display = 'block';
+            document.getElementById('publicLines').style.display = 'none';
+            document.getElementById('correctionBlock').style.display = 'block';
+            
+            document.getElementById('complexLabel').innerText = m.destNameShort ? `Комплекс / Доставка (${m.destNameShort})` : `Комплекс / Доставка`;
+            
+            const t = document.getElementById('type').value;
+            document.getElementById('customsTitle').innerHTML = (t === 'Pickup') ? `${baseCustomsText} <span style="color:var(--pulse-yellow-light); font-size:0.85em; font-weight:800; text-transform:lowercase;">(!орієнтовно)</span>` : baseCustomsText;
+
+            document.getElementById('resBid').innerText = f(bid);
+            document.getElementById('resFee').innerText = f(m.fee);
+            document.getElementById('resSwift').innerText = f(m.sw);
+            document.getElementById('resLand').innerText = f(m.land);
+            document.getElementById('resSea').innerText = f(m.sea);
+            document.getElementById('resComplex').innerText = f(m.cpx);
+            
+            document.getElementById('lineEvSurcharge').style.display = m.electricFee > 0 ? 'flex' : 'none';
+            document.getElementById('resEvSurcharge').innerText = "$" + m.electricFee;
+
+            document.getElementById('dlrFirmLine').style.display = m.isFirm ? 'flex' : 'none';
+            document.getElementById('dlrBosLine').style.display = m.isBos ? 'flex' : 'none';
+            document.getElementById('dlrBidderLine').style.display = m.isBidder ? 'flex' : 'none';
+            
+            if (m.isIns) {
+                document.getElementById('dlrInsLine').style.display = 'flex';
+                document.getElementById('dlrInsRes').innerText = f(m.insuranceFee);
+            } else {
+                document.getElementById('dlrInsLine').style.display = 'none';
+            }
+            
+            if (m.isCanada) {
+                document.getElementById('dlrCanTaxLine').style.display = 'flex';
+                document.getElementById('dlrCanDocLine').style.display = 'flex';
+                document.getElementById('canTaxPercent').innerText = (m.loc.tax * 100).toFixed(0);
+                document.getElementById('dlrCanTaxRes').innerText = f(m.canTax);
+                document.getElementById('dlrCanDocRes').innerText = f(m.canDoc);
+            } else {
+                document.getElementById('dlrCanTaxLine').style.display = 'none';
+                document.getElementById('dlrCanDocLine').style.display = 'none';
+            }
+            
+            document.getElementById('resCustomsTotal').innerHTML = formatUahUsd(m.cst);
+            document.getElementById('resDuty').innerHTML = formatUahUsd(m.dty);
+            document.getElementById('resExcise').innerHTML = formatUahUsd(m.exc);
+            document.getElementById('resVat').innerHTML = formatUahUsd(m.vt);
+            
+            const finalTot = Math.ceil(m.dlrTotal);
+            if(!isReverse) document.getElementById('totalBudget').value = finalTot;
+
+            animateValue('resTotal', currentTotal, finalTot, 600);
+            currentTotal = finalTot;
+
+        } else {
+            document.getElementById('dealerLines').style.display = 'none';
+            document.getElementById('publicLines').style.display = 'block';
+            document.getElementById('correctionBlock').style.display = 'none';
+
+            document.getElementById('pubDeliveryLabel').innerText = m.destNameShort ? `Повна вартість з доставкою (${m.destNameShort})` : `Повна вартість з доставкою`;
+
+            const t = document.getElementById('type').value;
+            document.getElementById('pubCustomsLabel').innerHTML = (t === 'Pickup') ? `${baseCustomsText} <span style="color:var(--pulse-yellow-light); font-size:0.85em; font-weight:800; text-transform:lowercase;">(!орієнтовно)</span>` : baseCustomsText;
+
+            document.getElementById('pubDeliveryRes').innerText = f(m.pubDeliverySum);
+            document.getElementById('pubCustomsRes').innerText = f(m.cst);
+
+            const finalTot = Math.ceil(m.pubTotal);
+            if(!isReverse) document.getElementById('totalBudget').value = finalTot;
+
+            animateValue('resTotal', currentTotal, finalTot, 600);
+            currentTotal = finalTot;
+        }
+
+        document.getElementById('timelineUI').style.display = 'flex';
+        document.getElementById('tlStart').innerText = m.port;
+        document.getElementById('tlEU').innerText = m.selectedEuPort; 
+        document.getElementById('tlDest').innerText = m.timelineCity; 
+        document.getElementById('flagUA').innerText = '🇺🇦';
+        document.getElementById('flagStart').innerText = (m.port === 'Toronto' || m.port.includes('Alberta') || m.port.includes('Halifax')) ? '🇨🇦' : '🇺🇸';
+        
+        document.getElementById('flagEU').innerText = (m.selectedEuPort === 'Gdansk') ? '🇵🇱' : '🇱🇹';
+        const euToUaLine = document.getElementById('euToUaLine');
+        euToUaLine.className = (m.selectedEuPort === 'Gdansk') ? 'tl-line line-train' : 'tl-line line-truck';
+    }
+</script>
+</body>
+</html>
