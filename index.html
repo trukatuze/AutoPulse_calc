@@ -492,7 +492,6 @@
 
     function submitDealerModal() {
         const pinInput = document.getElementById('dealerPin');
-        // НОВИЙ ПАРОЛЬ 909
         if(pinInput.value === '909') {
             vibro([30, 50, 30]); 
             closeDealerModal();
@@ -701,16 +700,16 @@
         dest.innerHTML = '';
         
         let optGdansk = document.createElement('option');
-        optGdansk.value = "Gdansk|1000|Клевань Рівне"; // Це змінить назву міста на візуальній шкалі доставки внизу
-        optGdansk.text = "GDANSK-Клевань Рівне ($1000)"; // Це змінить текст у самому випадаючому списку
+        optGdansk.value = "Gdansk|1000|Клевань Рівне";
+        optGdansk.text = "GDANSK-Клевань Рівне ($1000)";
         
         let optKlaipeda = document.createElement('option');
         optKlaipeda.value = "Klaipeda|1200|Зимна Вода Львів обл.";
         optKlaipeda.text = "KLAIPEDA-Зимна Вода Львів обл. ($1200)";
 
+        // ГОЛОВНЕ ВИПРАВЛЕННЯ: Блокуємо Гданськ для локацій, що йдуть тільки на Клайпеду
         if (s && s.end === 'Klaipeda') {
             dest.appendChild(optKlaipeda);
-            dest.appendChild(optGdansk);
         } else {
             dest.appendChild(optGdansk);
             dest.appendChild(optKlaipeda);
@@ -805,7 +804,7 @@
         const bidderFee = isBidder ? 300 : 0;
         const isIns = document.getElementById('toggleIns').checked;
         
-        let destVal = destSelect ? destSelect.value : "Gdansk|1000|Рівне";
+        let destVal = destSelect ? destSelect.value : "Gdansk|1000|Клевань Рівне";
         let parts = destVal.split('|');
         let selectedEuPort = parts[0];
         let cpx = parseFloat(parts[1]) || 0;
@@ -819,18 +818,17 @@
 
         const s = typeof seaRates !== 'undefined' ? (seaRates[loc.port] || { end: "Gdansk", Car: 0, SUV: 0, Pickup: 0, Motorcycle: 0 }) : { end: "Gdansk", Car: 0, SUV: 0, Pickup: 0, Motorcycle: 0 };
         
-        // НОВА ЛОГІКА СУШІ: Додаємо штраф ТІЛЬКИ якщо клієнт змінив дефолтний порт
         let extraLandCost = 0;
         if (s && s.end && selectedEuPort !== s.end) {
             const fuel = document.getElementById('fuel').value;
             const yr = parseInt(document.getElementById('year').value) || 2026;
             const vol = parseInt(document.getElementById('vol').value) || 0;
             let cityStrLen = city ? city.length : 5;
-            extraLandCost = ((cityStrLen + yr + vol) % 6) * 10 + 50; // від 50 до 100
+            extraLandCost = ((cityStrLen + yr + vol) % 6) * 10 + 50; 
         }
 
         let baseLand = (loc[t] === "Call" || !loc[t]) ? (loc["Car"] || 0) : loc[t];
-        if (baseLand === "Call") baseLand = 0; // Захист від помилки NaN
+        if (baseLand === "Call") baseLand = 0; 
         
         const origLand = Number(baseLand) + extraLandCost;
         let land = origLand;
