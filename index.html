@@ -358,7 +358,7 @@
             <div class="line"><span>Вартість лоту</span><span id="resBid">$0</span></div>
             <div class="line"><span>Аукціонний збір</span><span id="resFee">$0</span></div>
             
-            <div class="line" id="dlrCanTaxLine" style="display:none; font-weight:600; color: #f8fafc;"><span>Податок Канади (<span id="canTaxPercent">0</span>%)</span><span id="dlrCanTaxRes">$0</span></div>
+            <div class="line" id="dlrCanTaxLine" style="display:none; font-weight:600; color: #f8fafc;"><span id="canTaxLabel">Податок Канади (0%)</span><span id="dlrCanTaxRes">$0</span></div>
             <div class="line" id="dlrCanDocLine" style="display:none; font-weight:600; color: #f8fafc;"><span>Канадські документи</span><span id="dlrCanDocRes">$170</span></div>
 
             <div class="line"><span>Трансфер (SWIFT)</span><span id="resSwift">$0</span></div>
@@ -386,6 +386,10 @@
                     <span class="rate-text" id="resRates">-</span>
                 </div>
             </div>
+        </div>
+
+        <div class="line" id="taxLine" style="display:none; justify-content:space-between; padding: 4px 10px; margin-bottom: 5px; font-size: 0.8rem; color: var(--text-muted); border-bottom: none;">
+            <span>TAX</span><span id="resTax">$0</span>
         </div>
 
         <div class="total"><span>РАЗОМ:</span><span id="resTotal">$0</span></div>
@@ -667,6 +671,7 @@
             document.getElementById('timelineUI').style.display = 'none';
             document.getElementById('dlrCanTaxLine').style.display = 'none';
             document.getElementById('dlrCanDocLine').style.display = 'none';
+            document.getElementById('taxLine').style.display = 'none';
             cityInput.focus();
         });
 
@@ -707,7 +712,6 @@
         optKlaipeda.value = "Klaipeda|1200|Зимна Вода Львів обл.";
         optKlaipeda.text = "KLAIPEDA-Зимна Вода Львів обл. ($1200)";
 
-        // ГОЛОВНЕ ВИПРАВЛЕННЯ: Блокуємо Гданськ для локацій, що йдуть тільки на Клайпеду
         if (s && s.end === 'Klaipeda') {
             dest.appendChild(optKlaipeda);
         } else {
@@ -986,12 +990,21 @@
             if (m.isCanada) {
                 document.getElementById('dlrCanTaxLine').style.display = 'flex';
                 document.getElementById('dlrCanDocLine').style.display = 'flex';
-                document.getElementById('canTaxPercent').innerText = (m.loc.tax * 100).toFixed(0);
-                document.getElementById('dlrCanTaxRes').innerText = f(m.canTax);
+                
+                let taxPct = Math.round(m.loc.tax * 100);
+                let taxType = (taxPct === 5) ? 'GST' : 'HST';
+                document.getElementById('dlrCanTaxLine').innerHTML = `<span>Податок Канади (${taxType} ${taxPct}%)</span><span id="dlrCanTaxRes">${f(m.canTax)}</span>`;
+                
                 document.getElementById('dlrCanDocRes').innerText = f(m.canDoc);
+                
+                // Рядок TAX: рахуємо (Податок * 0.75) - 300. Якщо мінус, показуємо 0.
+                let calculatedTax = (m.canTax * 0.75) - 300;
+                document.getElementById('taxLine').style.display = 'flex';
+                document.getElementById('resTax').innerText = f(calculatedTax > 0 ? calculatedTax : 0);
             } else {
                 document.getElementById('dlrCanTaxLine').style.display = 'none';
                 document.getElementById('dlrCanDocLine').style.display = 'none';
+                document.getElementById('taxLine').style.display = 'none';
             }
             
             document.getElementById('resCustomsTotal').innerHTML = formatUahUsd(m.cst);
@@ -1009,6 +1022,7 @@
             document.getElementById('dealerLines').style.display = 'none';
             document.getElementById('publicLines').style.display = 'block';
             document.getElementById('correctionBlock').style.display = 'none';
+            document.getElementById('taxLine').style.display = 'none';
 
             document.getElementById('pubDeliveryLabel').innerText = m.destNameShort ? `Повна вартість з доставкою (${m.destNameShort})` : `Повна вартість з доставкою`;
 
